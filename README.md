@@ -108,7 +108,7 @@ deploy:
   stage: deploy
   image: cdrx/rancher-gitlab-deploy
   script:
-    - upgrade --environment production --stack acme --service web --new-image alpine:3.4 --no-finish-upgrade
+    - upgrade --environment production --stack acme --service web --new-image alpine:3.4 --no-finish-upgrade --envvar NODE_ENV=production --envvar FB_APP_ID=xxxxxxxx
 ```
 
 ## Help
@@ -167,6 +167,7 @@ Options:
   --create / --no-create          Will create the Rancher stack
                                   and service, if they are missed
                                   (needs --new-image option)
+  --envvar VARIABLE=VALUE         Add environment variable                        
   --help                          Show this message and exit.
 
 ```
