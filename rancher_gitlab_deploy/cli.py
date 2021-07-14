@@ -238,13 +238,23 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
                     labels['rap.port'] = port
                 new_service['launchConfig']['labels'] = labels
             if len(volume) > 0:
-                volumes = new_service['launchConfig'].get('dataVolumes', {})
+                volumes = new_service['launchConfig'].get('dataVolumes', [])
                 for f in volume:
                     msg('volume %s' % (f))
-                # newVolumes = filter(isDestinationExist, volume)
-                # def isDestinationExist():
-                #     return True
-                new_service['launchConfig']['dataVolumes'] = volume
+                def getTarget(v):
+                    [source,target] = v.split(":", 1)
+                    return target
+
+                oldVolumeTarget = map(getTarget, volumes)
+                def destinationIsNotExist(v):
+                    target = getTarget(v)
+                    msg('Check if target of %s is already defined' % (v))
+                    isExist = target in oldVolumeTarget
+                    if isExist:
+                        msg('Target is already define')
+                    return not isExist
+                newVolumes = list(filter(destinationIsNotExist, volume))
+                new_service['launchConfig']['dataVolumes'] = volumes + newVolumes
             try:
                 msg("Creating service %s in environment %s with image %s..." % (
                     new_service['name'], environment_name, new_image
@@ -383,10 +393,23 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
             labels['rap.port'] = port
         upgrade['inServiceStrategy']['launchConfig']['labels'] = labels
     if len(volume) > 0:
-        volumes = upgrade['inServiceStrategy']['launchConfig'].get('dataVolumes', {})
+        volumes = upgrade['inServiceStrategy']['launchConfig'].get('dataVolumes', [])
         for f in volume:
             msg('volume %s' % (f))
-        upgrade['inServiceStrategy']['launchConfig']['dataVolumes'] = volume
+        def getTarget(v):
+            [source,target] = v.split(":", 1)
+            return target
+
+        oldVolumeTarget = map(getTarget, volumes)
+        def destinationIsNotExist(v):
+            target = getTarget(v)
+            msg('Check if target of %s is already defined' % (v))
+            isExist = target in oldVolumeTarget
+            if isExist:
+                msg('Target is already define')
+            return not isExist
+        newVolumes = list(filter(destinationIsNotExist, volume))
+        upgrade['inServiceStrategy']['launchConfig']['dataVolumes'] = volumes + newVolumes
     # 5 -> Start the upgrade
 
     try:
