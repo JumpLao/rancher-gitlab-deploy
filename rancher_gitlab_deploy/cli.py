@@ -70,10 +70,12 @@ from time import sleep
               help="Deploy hostname")
 @click.option('--port',default='3000',
               help="Applicate port to forward to")
-@click.option('--envvar',default='',multiple=True,
+@click.option('--envvar',default=[],multiple=True,
               help="envvar to set")
+@click.option('--volume',default=[],multiple=True,
+              help="volume to set")
 
-def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar):
+def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume):
     """Performs an in service upgrade of the service specified on the command line"""
 
     if debug:
@@ -235,6 +237,14 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
                     msg('Forward incoming request to port %s' % (port))
                     labels['rap.port'] = port
                 new_service['launchConfig']['labels'] = labels
+            if len(volume) > 0:
+                volumes = new_service['launchConfig'].get('dataVolumes', {})
+                for f in volume:
+                    msg('volume %s' % (f))
+                # newVolumes = filter(isDestinationExist, volume)
+                # def isDestinationExist():
+                #     return True
+                new_service['launchConfig']['dataVolumes'] = volume
             try:
                 msg("Creating service %s in environment %s with image %s..." % (
                     new_service['name'], environment_name, new_image
@@ -335,7 +345,7 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
     }}
     # copy over the existing config
     upgrade['inServiceStrategy']['launchConfig'] = service['launchConfig']
-
+    # msg('Current launch config %s' % (json.dumps(service['launchConfig'])))
     if defined_labels:
         upgrade['inServiceStrategy']['launchConfig']['labels'].update(defined_labels)
 
@@ -372,6 +382,11 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
             msg('Forward incoming request to port %s' % (port))
             labels['rap.port'] = port
         upgrade['inServiceStrategy']['launchConfig']['labels'] = labels
+    if len(volume) > 0:
+        volumes = upgrade['inServiceStrategy']['launchConfig'].get('dataVolumes', {})
+        for f in volume:
+            msg('volume %s' % (f))
+        upgrade['inServiceStrategy']['launchConfig']['dataVolumes'] = volume
     # 5 -> Start the upgrade
 
     try:
