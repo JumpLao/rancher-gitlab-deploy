@@ -74,8 +74,10 @@ from time import sleep
               help="envvar to set")
 @click.option('--volume',default=[],multiple=True,
               help="volume to set")
+@click.option('--command',default=[],multiple=True,
+              help="command to set")
 
-def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume):
+def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume, command):
     """Performs an in service upgrade of the service specified on the command line"""
 
     if debug:
@@ -237,6 +239,9 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
                     msg('Forward incoming request to port %s' % (port))
                     labels['rap.port'] = port
                 new_service['launchConfig']['labels'] = labels
+            if len(command) > 0:
+                msg('Deploy using command %s' % (command))
+                new_service['launchConfig']['command'] = command
             if len(volume) > 0:
                 volumes = new_service['launchConfig'].get('dataVolumes', [])
                 for f in volume:
