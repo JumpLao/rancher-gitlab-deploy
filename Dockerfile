@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.8-alpine
 ADD . /rancher-gitlab-deploy
 WORKDIR /rancher-gitlab-deploy
 RUN python3 /rancher-gitlab-deploy/setup.py install
