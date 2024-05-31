@@ -76,8 +76,10 @@ from time import sleep
               help="volume to set")
 @click.option('--command',default=[],multiple=True,
               help="command to set")
+@click.option('--certname',default=None,
+              help="command to set")
 
-def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume, command):
+def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume, command, certname):
     """Performs an in service upgrade of the service specified on the command line"""
 
     if debug:
@@ -234,7 +236,10 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
                 msg('Deploy using hostname %s' % (hostname))
                 labels = new_service['launchConfig'].get('labels', {})
                 labels['rap.host'] = hostname
-                labels['rap.le_host'] = hostname
+                if not certname:
+                    labels['rap.le_host'] = hostname
+                else:
+                    labels['rap.cert_name'] = certname
                 if port:
                     msg('Forward incoming request to port %s' % (port))
                     labels['rap.port'] = port
@@ -392,7 +397,10 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
         msg('Deploy using hostname %s' % (hostname))
         labels = upgrade['inServiceStrategy']['launchConfig'].get('labels', {})
         labels['rap.host'] = hostname
-        labels['rap.le_host'] = hostname
+        if not certname:
+            labels['rap.le_host'] = hostname
+        else:
+            labels['rap.cert_name'] = certname
         if port:
             msg('Forward incoming request to port %s' % (port))
             labels['rap.port'] = port
