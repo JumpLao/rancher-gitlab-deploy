@@ -76,10 +76,12 @@ from time import sleep
               help="volume to set")
 @click.option('--command',default=[],multiple=True,
               help="command to set")
+@click.option('--ulimit',default=None, multiple=True,
+              help="If specified, add a ulimit to the service", type=(str, str))
 @click.option('--certname',default=None,
               help="command to set")
 
-def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume, command, certname):
+def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, new_image, batch_size, batch_interval, start_before_stopping, upgrade_timeout, wait_for_upgrade_to_finish, rollback_on_error, finish_upgrade, sidekicks, new_sidekick_image, create, labels, label, variables, variable, service_links, service_link, debug, ssl_verify, hostname, port, envvar, volume, command, certname, ulimit):
     """Performs an in service upgrade of the service specified on the command line"""
 
     if debug:
@@ -265,6 +267,14 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
                     return not isExist
                 newVolumes = list(filter(destinationIsNotExist, volume))
                 new_service['launchConfig']['dataVolumes'] = volumes + newVolumes
+            if ulimit:
+                ulimits = new_service['launchConfig'].get('ulimits', [])
+                for item in ulimit:
+                    name = item[0]
+                    value = item[1]
+                    soft, hard = value.split(':', 1)
+                    ulimits.append({'name': name, 'soft': soft, 'hard': hard})
+                new_service['launchConfig']['ulimits'] = ulimits
             try:
                 msg("Creating service %s in environment %s with image %s..." % (
                     new_service['name'], environment_name, new_image
@@ -423,6 +433,14 @@ def main(rancher_url, rancher_key, rancher_secret, environment, stack, service, 
             return not isExist
         newVolumes = list(filter(destinationIsNotExist, volume))
         upgrade['inServiceStrategy']['launchConfig']['dataVolumes'] = volumes + newVolumes
+    if ulimit:
+        ulimits = upgrade['inServiceStrategy']['launchConfig'].get('ulimits', [])
+        for item in ulimit:
+            name = item[0]
+            value = item[1]
+            soft, hard = value.split(':', 1)
+            ulimits.append({'name': name, 'soft': soft, 'hard': hard})
+        upgrade['inServiceStrategy']['launchConfig']['ulimits'] = ulimits
     # 5 -> Start the upgrade
 
     try:
@@ -536,7 +554,7 @@ def bail(message, exit=True):
 
 
 def debug_requests_on():
-    '''Switches on logging of the requests module.'''
+    """Switches on logging of the requests module."""
     HTTPConnection.debuglevel = 1
 
     logging.basicConfig()
