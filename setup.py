@@ -9,8 +9,9 @@ setup(name='rancher-gitlab-deploy',
     packages=['rancher_gitlab_deploy'],
     zip_safe=False,
     install_requires=[
-        'click',
-        'requests',
+        'click<8.2',
+        'requests<2.29',
+        'urllib3<2.0',
         'colorama'
     ],
     entry_points = {
